@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "code": "ERR_USER_EXISTED",
+  "message": "User already exists",
+  "result": null
+}

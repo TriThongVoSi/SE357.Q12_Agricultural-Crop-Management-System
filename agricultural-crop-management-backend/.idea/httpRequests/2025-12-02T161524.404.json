@@ -1,0 +1,6 @@
+{
+  "status": 404,
+  "code": "ERR_USER_NOT_FOUND",
+  "message": "User not found",
+  "result": null
+}

@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "code": "ERR_PASSWORD_INVALID",
+  "message": "Password must be at least 8 characters",
+  "result": null
+}

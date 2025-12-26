@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "code": "SUCCESS",
+  "message": "OK",
+  "result": {
+    "token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbjEiLCJzY29wZSI6IlJPTEVfRkFSTUVSIiwiaXNzIjoiUXVhbkx5TXVhVnUiLCJleHAiOjE3NjQ3NjQwMDAsImlhdCI6MTc2NDc2MDQwMCwianRpIjoiMjBkNDc2MjQtNTY0Zi00YjgyLWIzOTgtMTA4ZjYzN2Q5OWE1In0.NcY8Y5X-rVGxoOe_LL3T_-BsOXbeyOBxreakieKyPSkbBLTPTnlbpjo0kiDTxxIyJCal2liFw0TIQGQF-VKvWQ",
+    "authenticated": true,
+    "username": "admin1",
+    "roles": [
+      "FARMER"
+    ]
+  }
+}

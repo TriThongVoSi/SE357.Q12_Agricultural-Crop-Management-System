@@ -1,0 +1,23 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< org.example:agricultural-crop-management-backend >----------
+[INFO] Building QuanLyMuaVu 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ agricultural-crop-management-backend ---
+[INFO] Deleting C:\Users\Asus\Desktop\ACM_NEW-main\ACM_NEW-main\agricultural-crop-management-backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ agricultural-crop-management-backend ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 4 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ agricultural-crop-management-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 247 source files with javac [debug parameters release 17] to target\classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  9.048 s
+[INFO] Finished at: 2025-12-26T07:18:49+07:00
+[INFO] ------------------------------------------------------------------------

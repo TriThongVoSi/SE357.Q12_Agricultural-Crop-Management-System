@@ -1,0 +1,550 @@
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 74
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "Debuger1",
+  "password": "12345678",
+  "role": "FARMER"
+}
+
+<> 2025-12-24T104000.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 71
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "Thong",
+  "password": "12345678",
+  "role": "FARMER"
+}
+
+<> 2025-12-22T100844.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 52
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.6
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "farmer",
+  "password": "12345678"
+}
+
+<> 2025-12-19T160238.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 72
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.6
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "farmer",
+  "password": "12346578",
+  "role": "FARMER"
+}
+
+<> 2025-12-19T155856.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 75
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.6
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "farmer",
+  "password": "password123",
+  "role": "FARMER"
+}
+
+<> 2025-12-19T102655.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 75
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.6
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "farmer",
+  "password": "password123",
+  "role": "FARMER"
+}
+
+<> 2025-12-19T003536.200.json
+
+###
+
+GET http://localhost:8080/api/v1/plots
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-12-12T235002.401.json
+
+###
+
+GET http://localhost:8080/api/v1/plots
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-12-12T225834.401.json
+
+###
+
+GET http://localhost:8080/api/v1/user/me
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-12-12T163235.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 103
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "$2a$10$Ca/.1E7UUpY59IIFJ0rgS.yHJjbgiuwk.ituJuRddCC1ewwu.qBEC"
+}
+
+<> 2025-12-11T144237.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 53
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "0900000001"
+}
+
+<> 2025-12-11T144144.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 54
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "password123"
+}
+
+<> 2025-12-03T181452.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 54
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "password123"
+}
+
+<> 2025-12-03T181333.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 55
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin1",
+  "password": "password123"
+}
+
+<> 2025-12-03T181320.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 55
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "farmer",
+  "password": "password123"
+}
+
+<> 2025-12-03T175126.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 73
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "farmer",
+  "password": "password123",
+  "role": "USER"
+}
+
+<> 2025-12-03T173318.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 55
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin1",
+  "password": "password123"
+}
+
+<> 2025-12-03T170300.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 55
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin1",
+  "password": "password123"
+}
+
+<> 2025-12-02T203943.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/introspect
+Content-Type: application/json
+Content-Length: 17
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "token": ""
+}
+
+<> 2025-12-02T203923.500.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 55
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin1",
+  "password": "password123"
+}
+
+<> 2025-12-02T181219.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 74
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin1",
+  "password": "password123",
+  "role": "ADMIN"
+}
+
+<> 2025-12-02T181154.200.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 54
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "password123"
+}
+
+<> 2025-12-02T181040.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 54
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "password123"
+}
+
+<> 2025-12-02T180824.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 70
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "12345678",
+  "role": "ADMIN"
+}
+
+<> 2025-12-02T180751.400.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 67
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "admin",
+  "role": "ADMIN"
+}
+
+<> 2025-12-02T180712.400.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 48
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+<> 2025-12-02T180635.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 38
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "",
+  "password": ""
+}
+
+<> 2025-12-02T161524.404.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+Content-Length: 48
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "admin"
+}
+
+<> 2025-12-02T161520.401.json
+
+###
+
+GET http://localhost:8080/api/v1/user/me
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-12-02T161436.401.json
+
+###
+
+POST http://localhost:8080/api/v1/auth/sign-up
+Content-Type: application/json
+Content-Length: 67
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": "admin",
+  "password": "admin",
+  "role": "ADMIN"
+}
+
+<> 2025-12-02T161106.400.json
+
+###
+
+PUT http://localhost:8080/api/v1/user/profile
+Content-Type: application/json
+Content-Length: 20
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "username": ""
+}
+
+<> 2025-12-02T155626.401.json
+
+###
+
+POST http://localhost:8080/api/v1/admin/documents
+Content-Type: application/json
+Content-Length: 34
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "",
+  "content": ""
+}
+
+<> 2025-12-02T155536.401.json
+
+###
+
+POST http://localhost:8080/api/v1/admin/documents
+Content-Type: application/json
+Content-Length: 34
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "",
+  "content": ""
+}
+
+<> 2025-12-02T155400.401.json
+
+###
+
+GET http://localhost:8080/api/v1/user/me
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-12-02T155333.401.json
+
+###
+
+POST http://localhost:8080/api/v1/farms
+Content-Type: application/json
+Content-Length: 54
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "name": "Hello",
+  "addressId": 0,
+  "area": {1}
+}
+
+<> 2025-12-02T155258.401.json
+
+###
+
+POST http://localhost:8080/api/v1/admin/documents
+Content-Type: application/json
+Content-Length: 34
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.2.5
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+{
+  "title": "",
+  "content": ""
+}
+
+<> 2025-12-02T155013.401.json
+
+###
+

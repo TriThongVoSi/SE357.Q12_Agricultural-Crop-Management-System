@@ -1,0 +1,18 @@
+
+jwt:
+  signerKey: "ltFNTJWYfNUEV5wm3K3npyQwCMW7tDRvnHLmkefPeoKR6BEpsoCPRNR/jIDKD+h/"
+  valid-duration: 3600 # in second
+  refreshable-duration: 36000 # in seconds
+
+# Farm module security configuration
+farm:
+  security:
+    # Set to true in production when behind trusted load balancer/proxy
+    # Only enable if you trust X-Forwarded-For header from your infrastructure
+    trust-proxy-headers: false
+    
+    # Optional: List of trusted proxy IP addresses
+    # Only requests from these IPs will have X-Forwarded-For header trusted
+    # Leave empty to trust all proxies (not recommended for production)
+    # Example: ["10.0.0.1", "10.0.0.2", "172.16.0.0/12"]
+    trusted-proxy-ips: []
