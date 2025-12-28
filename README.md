@@ -381,8 +381,8 @@ This project is **private** - All rights reserved.
 ---
 
 ## 🤝 Contributors
-
-- SE357.Q12 Team - UEH University
+Võ Sĩ Trí Thông - Hồ Ngọc Quỳnh
+- SE357.Q12 Team - UIT University
 
 ---
 
