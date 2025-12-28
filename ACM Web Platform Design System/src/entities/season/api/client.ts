@@ -153,6 +153,25 @@ export const seasonApi = {
         const response = await httpClient.get('/api/v1/seasons/my');
         return parseApiResponse(response.data, z.array(MySeasonSchema));
     },
-};
 
+    /**
+     * BR15: Archive a completed or cancelled season
+     * PATCH /api/v1/seasons/{id}/archive
+     */
+    archive: async (id: number): Promise<Season> => {
+        const response = await httpClient.patch(`/api/v1/seasons/${id}/archive`);
+        return parseApiResponse(response.data, SeasonSchema);
+    },
+
+    /**
+     * BR17: Search seasons by keyword
+     * GET /api/v1/seasons/search?q={keyword}
+     */
+    searchByKeyword: async (keyword: string): Promise<Season[]> => {
+        const response = await httpClient.get('/api/v1/seasons/search', {
+            params: { q: keyword },
+        });
+        return parseApiResponse(response.data, z.array(SeasonSchema));
+    },
+};
 

@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.example.QuanLyMuaVu.DTO.Common.ApiResponse;
 import org.example.QuanLyMuaVu.DTO.Common.PageResponse;
 import org.example.QuanLyMuaVu.DTO.Request.CreateExpenseRequest;
+import org.example.QuanLyMuaVu.DTO.Request.ExpenseSearchCriteria;
 import org.example.QuanLyMuaVu.DTO.Request.UpdateExpenseRequest;
 import org.example.QuanLyMuaVu.DTO.Response.ExpenseResponse;
 import org.example.QuanLyMuaVu.Service.SeasonExpenseService;
@@ -29,7 +30,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * REST endpoints for managing season-level expenses (business flow [4]) that are
+ * REST endpoints for managing season-level expenses (business flow [4]) that
+ * are
  * always attached to seasons of farms where the current user is a member.
  */
 
@@ -40,88 +42,120 @@ import java.time.LocalDate;
 @PreAuthorize("hasRole('FARMER')")
 public class SeasonExpenseController {
 
-    SeasonExpenseService seasonExpenseService;
+        SeasonExpenseService seasonExpenseService;
 
-    @Operation(summary = "List expenses of a season", description = "Search expenses for a given season of the current farmer")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
-    })
-    @GetMapping("/seasons/{seasonId}/expenses")
-    public ApiResponse<PageResponse<ExpenseResponse>> listExpenses(
-            @PathVariable Integer seasonId,
-            @Parameter(description = "From date (yyyy-MM-dd)")
-            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @Parameter(description = "To date (yyyy-MM-dd)")
-            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(value = "minAmount", required = false) BigDecimal minAmount,
-            @RequestParam(value = "maxAmount", required = false) BigDecimal maxAmount,
-            @Parameter(description = "Page index (0-based)")
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @Parameter(description = "Page size")
-            @RequestParam(value = "size", defaultValue = "20") int size
-    ) {
-        return ApiResponse.success(
-                seasonExpenseService.listExpensesForSeason(seasonId, from, to, minAmount, maxAmount, page, size));
-    }
+        @Operation(summary = "List expenses of a season", description = "Search expenses for a given season of the current farmer")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
+        })
+        @GetMapping("/seasons/{seasonId}/expenses")
+        public ApiResponse<PageResponse<ExpenseResponse>> listExpenses(
+                        @PathVariable Integer seasonId,
+                        @Parameter(description = "From date (yyyy-MM-dd)") @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                        @Parameter(description = "To date (yyyy-MM-dd)") @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                        @RequestParam(value = "minAmount", required = false) BigDecimal minAmount,
+                        @RequestParam(value = "maxAmount", required = false) BigDecimal maxAmount,
+                        @Parameter(description = "Page index (0-based)") @RequestParam(value = "page", defaultValue = "0") int page,
+                        @Parameter(description = "Page size") @RequestParam(value = "size", defaultValue = "20") int size) {
+                return ApiResponse.success(
+                                seasonExpenseService.listExpensesForSeason(seasonId, from, to, minAmount, maxAmount,
+                                                page, size));
+        }
 
-    @Operation(summary = "Create expense for season", description = "Create a new expense linked to a season")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
-    })
-    @PostMapping("/seasons/{seasonId}/expenses")
-    public ApiResponse<ExpenseResponse> createExpense(
-            @PathVariable Integer seasonId,
-            @Valid @RequestBody CreateExpenseRequest request
-    ) {
-        return ApiResponse.success(seasonExpenseService.createExpense(seasonId, request));
-    }
+        @Operation(summary = "BR17: Search expenses by criteria", description = "Search expenses using ExpenseSearchCriteria for Text_change() style filtering")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+        })
+        @GetMapping("/expenses/search")
+        public ApiResponse<PageResponse<ExpenseResponse>> searchExpenses(
+                        @Parameter(description = "Filter by season ID") @RequestParam(value = "seasonId", required = false) Integer seasonId,
+                        @Parameter(description = "Filter by plot ID") @RequestParam(value = "plotId", required = false) Integer plotId,
+                        @Parameter(description = "Filter by task ID") @RequestParam(value = "taskId", required = false) Integer taskId,
+                        @Parameter(description = "Filter by category") @RequestParam(value = "category", required = false) String category,
+                        @Parameter(description = "From date (yyyy-MM-dd)") @RequestParam(value = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+                        @Parameter(description = "To date (yyyy-MM-dd)") @RequestParam(value = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+                        @Parameter(description = "Minimum amount") @RequestParam(value = "minAmount", required = false) BigDecimal minAmount,
+                        @Parameter(description = "Maximum amount") @RequestParam(value = "maxAmount", required = false) BigDecimal maxAmount,
+                        @Parameter(description = "Search keyword") @RequestParam(value = "q", required = false) String keyword,
+                        @Parameter(description = "Page index (0-based)") @RequestParam(value = "page", defaultValue = "0") int page,
+                        @Parameter(description = "Page size") @RequestParam(value = "size", defaultValue = "20") int size) {
+                ExpenseSearchCriteria criteria = ExpenseSearchCriteria.builder()
+                                .seasonId(seasonId)
+                                .plotId(plotId)
+                                .taskId(taskId)
+                                .category(category)
+                                .fromDate(fromDate)
+                                .toDate(toDate)
+                                .minAmount(minAmount)
+                                .maxAmount(maxAmount)
+                                .keyword(keyword)
+                                .build();
 
-    @Operation(summary = "Get expense detail", description = "Get expense detail if it belongs to a season of current farmer")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Expense not found")
-    })
-    @GetMapping("/expenses/{id}")
-    public ApiResponse<ExpenseResponse> getExpense(@PathVariable Integer id) {
-        return ApiResponse.success(seasonExpenseService.getExpense(id));
-    }
+                // BR17: Call PascalCase wrapper method
+                return ApiResponse.success(seasonExpenseService.SearchExpense(criteria, page, size));
+        }
 
-    @Operation(summary = "Update expense", description = "Update expense details while season is not locked/closed")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Expense not found")
-    })
-    @PutMapping("/expenses/{id}")
-    public ApiResponse<ExpenseResponse> updateExpense(
-            @PathVariable Integer id,
-            @Valid @RequestBody UpdateExpenseRequest request
-    ) {
-        return ApiResponse.success(seasonExpenseService.updateExpense(id, request));
-    }
+        @Operation(summary = "Create expense for season", description = "Create a new expense linked to a season")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
+        })
+        @PostMapping("/seasons/{seasonId}/expenses")
+        public ApiResponse<ExpenseResponse> createExpense(
+                        @PathVariable Integer seasonId,
+                        @Valid @RequestBody CreateExpenseRequest request) {
+                // BR8: Call PascalCase wrapper method with amount validation
+                return ApiResponse.success(seasonExpenseService.CreateExpense(seasonId, request));
+        }
 
-    @Operation(summary = "Delete expense", description = "Delete or void an expense while season is not locked/closed")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Expense not found")
-    })
-    @DeleteMapping("/expenses/{id}")
-    public ApiResponse<Void> deleteExpense(@PathVariable Integer id) {
-        seasonExpenseService.deleteExpense(id);
-        return ApiResponse.success(null);
-    }
+        @Operation(summary = "Get expense detail", description = "Get expense detail if it belongs to a season of current farmer")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Expense not found")
+        })
+        @GetMapping("/expenses/{id}")
+        public ApiResponse<ExpenseResponse> getExpense(@PathVariable Integer id) {
+                return ApiResponse.success(seasonExpenseService.getExpense(id));
+        }
+
+        @Operation(summary = "Update expense", description = "Update expense details while season is not locked/closed")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Expense not found")
+        })
+        @PutMapping("/expenses/{id}")
+        public ApiResponse<ExpenseResponse> updateExpense(
+                        @PathVariable Integer id,
+                        @Valid @RequestBody UpdateExpenseRequest request) {
+                // BR12: Call PascalCase wrapper method with amount validation
+                return ApiResponse.success(seasonExpenseService.UpdateExpense(id, request));
+        }
+
+        @Operation(summary = "Delete expense", description = "BR15: Delete expense after confirmation")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Expense not found")
+        })
+        @DeleteMapping("/expenses/{id}")
+        public ApiResponse<Void> deleteExpense(@PathVariable Integer id) {
+                // BR15: Call PascalCase wrapper method
+                seasonExpenseService.DeleteExpense(id);
+                return ApiResponse.success(null);
+        }
 }

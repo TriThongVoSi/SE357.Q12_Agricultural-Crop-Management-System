@@ -97,7 +97,8 @@ public class SeasonController {
         })
         @PostMapping
         public ApiResponse<SeasonDetailResponse> createSeason(@Valid @RequestBody CreateSeasonRequest request) {
-                return ApiResponse.success(seasonService.createSeason(request));
+                // BR8: Call PascalCase wrapper method with season name uniqueness validation
+                return ApiResponse.success(seasonService.CreateSeason(request));
         }
 
         @Operation(summary = "Update season", description = "Update season details while status is still editable")
@@ -113,7 +114,8 @@ public class SeasonController {
         public ApiResponse<SeasonDetailResponse> updateSeason(
                         @PathVariable Integer id,
                         @Valid @RequestBody UpdateSeasonRequest request) {
-                return ApiResponse.success(seasonService.updateSeason(id, request));
+                // BR12: Call PascalCase wrapper method with season name uniqueness validation
+                return ApiResponse.success(seasonService.UpdateSeason(id, request));
         }
 
         @Operation(summary = "Update season status", description = "Change season status (PLANNED → ACTIVE → COMPLETED/CANCELLED/ARCHIVED)")
@@ -144,7 +146,8 @@ public class SeasonController {
         public ApiResponse<SeasonResponse> startSeason(
                         @PathVariable Integer id,
                         @RequestBody(required = false) org.example.QuanLyMuaVu.DTO.Request.StartSeasonRequest request) {
-                return ApiResponse.success(seasonService.startSeason(id, request));
+                // BR23: Call PascalCase wrapper method
+                return ApiResponse.success(seasonService.StartSeason(id, request));
         }
 
         @Operation(summary = "Complete season", description = "Complete an active season (ACTIVE → COMPLETED)")
@@ -159,7 +162,8 @@ public class SeasonController {
         public ApiResponse<SeasonResponse> completeSeason(
                         @PathVariable Integer id,
                         @Valid @RequestBody org.example.QuanLyMuaVu.DTO.Request.CompleteSeasonRequest request) {
-                return ApiResponse.success(seasonService.completeSeason(id, request));
+                // BR27: Call PascalCase wrapper method
+                return ApiResponse.success(seasonService.CompleteSeason(id, request));
         }
 
         @Operation(summary = "Cancel season", description = "Cancel a season (→ CANCELLED)")
@@ -177,7 +181,8 @@ public class SeasonController {
                 if (request == null) {
                         request = org.example.QuanLyMuaVu.DTO.Request.CancelSeasonRequest.builder().build();
                 }
-                return ApiResponse.success(seasonService.cancelSeason(id, request));
+                // BR31: Call PascalCase wrapper method
+                return ApiResponse.success(seasonService.CancelSeason(id, request));
         }
 
         @Operation(summary = "Delete season", description = "Delete a season if allowed by business constraints")
@@ -192,5 +197,31 @@ public class SeasonController {
         public ApiResponse<Void> deleteSeason(@PathVariable Integer id) {
                 seasonService.deleteSeason(id);
                 return ApiResponse.success(null);
+        }
+
+        @Operation(summary = "Archive season", description = "BR15: Archive a completed or cancelled season")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid status transition - only COMPLETED or CANCELLED can be archived"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
+        })
+        @PatchMapping("/{id}/archive")
+        public ApiResponse<SeasonResponse> archiveSeason(@PathVariable Integer id) {
+                // BR14: Call ArchiveSeason() PascalCase method
+                return ApiResponse.success(seasonService.ArchiveSeason(id));
+        }
+
+        @Operation(summary = "Search seasons by keyword", description = "BR17: Search seasons using Text_change() style keyword search")
+        @ApiResponses({
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+        })
+        @GetMapping("/search")
+        public ApiResponse<java.util.List<SeasonResponse>> searchSeasonsByKeyword(
+                        @RequestParam(value = "q", required = false) String keyword) {
+                return ApiResponse.success(seasonService.searchSeasonsByKeyword(keyword));
         }
 }

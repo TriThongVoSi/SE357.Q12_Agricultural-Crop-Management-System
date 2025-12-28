@@ -601,4 +601,166 @@ public class SeasonService {
         // both open-ended
         return true;
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BR COMPLIANT PASCALCASE WRAPPER METHODS
+    // As required by Demo Gen Code.docx Business Rules
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * BR8: CreateSeason wrapper method with season name uniqueness validation.
+     * Called by controller to comply with BR naming convention.
+     *
+     * @param request the season creation request
+     * @return the created season detail response
+     */
+    public SeasonDetailResponse CreateSeason(CreateSeasonRequest request) {
+        // BR8: Validate season name uniqueness within plot
+        validateSeasonNameUniquenessInPlot(request.getPlotId(), request.getSeasonName(), null);
+        return createSeason(request);
+    }
+
+    /**
+     * BR12: UpdateSeason wrapper method with season name uniqueness validation.
+     * Called by controller to comply with BR naming convention.
+     *
+     * @param id      the season ID
+     * @param request the season update request
+     * @return the updated season detail response
+     */
+    public SeasonDetailResponse UpdateSeason(Integer id, UpdateSeasonRequest request) {
+        Season existing = seasonRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+        // BR12: Validate season name uniqueness within plot (excluding self)
+        validateSeasonNameUniquenessInPlot(existing.getPlot().getId(), request.getSeasonName(), id);
+        return updateSeason(id, request);
+    }
+
+    /**
+     * BR23: StartSeason wrapper method.
+     * Called by controller to comply with BR naming convention.
+     *
+     * @param id      the season ID
+     * @param request optional start request with actual start date
+     * @return the updated season response
+     */
+    public SeasonResponse StartSeason(Integer id, StartSeasonRequest request) {
+        return startSeason(id, request);
+    }
+
+    /**
+     * BR27: CompleteSeason wrapper method.
+     * Called by controller to comply with BR naming convention.
+     *
+     * @param id      the season ID
+     * @param request the complete request with end date and optional yield
+     * @return the updated season response
+     */
+    public SeasonResponse CompleteSeason(Integer id, CompleteSeasonRequest request) {
+        return completeSeason(id, request);
+    }
+
+    /**
+     * BR31: CancelSeason wrapper method.
+     * Called by controller to comply with BR naming convention.
+     *
+     * @param id      the season ID
+     * @param request the cancel request with optional reason
+     * @return the updated season response
+     */
+    public SeasonResponse CancelSeason(Integer id, CancelSeasonRequest request) {
+        return cancelSeason(id, request);
+    }
+
+    /**
+     * BR15: ArchiveSeason - Archives a completed or cancelled season.
+     * Called by controller for BR14 flow: Confirm → ArchiveSeason().
+     * Sets status to ARCHIVED; record remains in database but hidden from active
+     * list.
+     *
+     * @param id the season ID to archive
+     * @return the updated season response
+     */
+    public SeasonResponse ArchiveSeason(Integer id) {
+        Season season = seasonRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+        farmAccessService.assertCurrentUserCanAccessSeason(season);
+
+        // BR15: Only COMPLETED or CANCELLED seasons can be archived
+        if (season.getStatus() != SeasonStatus.COMPLETED &&
+                season.getStatus() != SeasonStatus.CANCELLED) {
+            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
+        }
+
+        season.setStatus(SeasonStatus.ARCHIVED);
+        Season saved = seasonRepository.save(season);
+        return seasonMapper.toResponse(saved);
+    }
+
+    /**
+     * BR17: Search seasons by keyword for Text_change() handler.
+     *
+     * @param keyword the search keyword
+     * @return list of matching season responses
+     */
+    public List<SeasonResponse> searchSeasonsByKeyword(String keyword) {
+        User currentUser = getCurrentUser();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        List<Season> results = seasonRepository.searchByKeywordAndOwnerId(keyword.trim(), currentUser.getId());
+        return results.stream()
+                .map(seasonMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * BR20/BR24/BR28: Get season by ID for confirmation screen display.
+     * Used by displayStartSeasonConfirmationScreen,
+     * displayCompleteSeasonConfirmationScreen,
+     * displayCancelSeasonConfirmationScreen.
+     *
+     * @param id the season ID
+     * @return the season entity for the confirmation screen
+     */
+    public Season getSeasonById(Integer id) {
+        Season season = seasonRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+        farmAccessService.assertCurrentUserCanAccessSeason(season);
+        return season;
+    }
+
+    /**
+     * BR22/BR26/BR30: ValidateStatusConstraints - Check if status transition is
+     * valid.
+     * Used by UI handler ValidateStatusConstraints() before calling status change
+     * methods.
+     *
+     * @param currentStatus the current season status
+     * @param targetStatus  the target season status
+     * @return true if transition is valid
+     */
+    public boolean ValidateStatusConstraints(SeasonStatus currentStatus, SeasonStatus targetStatus) {
+        return isValidStatusTransition(currentStatus, targetStatus);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PRIVATE VALIDATION HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * BR8/BR12: Validate that season name is unique within the plot.
+     *
+     * @param plotId     the plot ID
+     * @param seasonName the season name to validate
+     * @param excludeId  the season ID to exclude (null for create, season ID for
+     *                   update)
+     */
+    private void validateSeasonNameUniquenessInPlot(Integer plotId, String seasonName, Integer excludeId) {
+        boolean exists = seasonRepository.existsByPlotIdAndSeasonNameIgnoreCaseExcluding(
+                plotId, seasonName, excludeId);
+        if (exists) {
+            throw new AppException(ErrorCode.SEASON_NAME_EXISTS_IN_PLOT);
+        }
+    }
 }

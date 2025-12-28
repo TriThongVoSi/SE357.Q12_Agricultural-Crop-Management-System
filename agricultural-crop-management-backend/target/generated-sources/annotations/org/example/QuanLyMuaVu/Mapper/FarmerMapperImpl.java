@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-12-26T11:52:23+0700",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 23.0.2 (Oracle Corporation)"
+    date = "2025-12-28T16:18:09+0700",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.44.0.v20251118-1623, environment: Java 21.0.9 (Eclipse Adoptium)"
 )
 @Component
 public class FarmerMapperImpl implements FarmerMapper {
@@ -23,8 +23,8 @@ public class FarmerMapperImpl implements FarmerMapper {
 
         User.UserBuilder user = User.builder();
 
-        user.username( request.getUsername() );
         user.password( request.getPassword() );
+        user.username( request.getUsername() );
 
         return user.build();
     }

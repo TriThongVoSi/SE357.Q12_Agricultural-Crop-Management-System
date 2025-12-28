@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.example.QuanLyMuaVu.DTO.Common.PageResponse;
 import org.example.QuanLyMuaVu.DTO.Request.CreateExpenseRequest;
+import org.example.QuanLyMuaVu.DTO.Request.ExpenseSearchCriteria;
 import org.example.QuanLyMuaVu.DTO.Request.UpdateExpenseRequest;
 import org.example.QuanLyMuaVu.DTO.Response.ExpenseResponse;
 import org.example.QuanLyMuaVu.Entity.Expense;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -267,5 +269,169 @@ public class SeasonExpenseService {
                 .expenseDate(expense.getExpenseDate())
                 .createdAt(expense.getCreatedAt())
                 .build();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BR COMPLIANT PASCALCASE WRAPPER METHODS
+    // As required by Demo Gen Code.docx Business Rules
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * BR8: CreateExpense wrapper method with constraint validations.
+     * Validates: amount > 0, season belongs to plot, task belongs to season.
+     *
+     * @param seasonId the season ID
+     * @param request  the creation request
+     * @return the created expense response
+     */
+    public ExpenseResponse CreateExpense(Integer seasonId, CreateExpenseRequest request) {
+        validateExpenseAmount(request);
+        return createExpense(seasonId, request);
+    }
+
+    /**
+     * BR12: UpdateExpense wrapper method with constraint validations.
+     * Validates: amount > 0, season belongs to plot, task belongs to season.
+     *
+     * @param id      the expense ID
+     * @param request the update request
+     * @return the updated expense response
+     */
+    public ExpenseResponse UpdateExpense(Integer id, UpdateExpenseRequest request) {
+        validateExpenseAmount(request);
+        return updateExpense(id, request);
+    }
+
+    /**
+     * BR15: DeleteExpense wrapper method.
+     * Called after delete confirmation dialog.
+     *
+     * @param id the expense ID to delete
+     */
+    public void DeleteExpense(Integer id) {
+        deleteExpense(id);
+    }
+
+    /**
+     * BR17: SearchExpense - Search expenses by criteria.
+     * Supports filtering by seasonId, plotId, taskId, category, date range, and
+     * keyword.
+     *
+     * @param criteria the search criteria
+     * @param page     page number (0-indexed)
+     * @param size     page size
+     * @return paginated expense responses
+     */
+    public PageResponse<ExpenseResponse> SearchExpense(ExpenseSearchCriteria criteria, int page, int size) {
+        User currentUser = getCurrentUser();
+
+        // Get all expenses for this farmer's seasons
+        List<Season> farmerSeasons = seasonRepository.findAllByFarmOwnerId(currentUser.getId());
+        List<Integer> seasonIds = farmerSeasons.stream().map(Season::getId).toList();
+
+        if (seasonIds.isEmpty()) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+            return PageResponse.of(new PageImpl<>(List.of(), pageable, 0), List.of());
+        }
+
+        // Get all expenses for these seasons
+        List<Expense> allExpenses = new ArrayList<>();
+        for (Integer seasonId : seasonIds) {
+            allExpenses.addAll(expenseRepository.findAllBySeason_Id(seasonId));
+        }
+
+        // Apply filters
+        List<ExpenseResponse> filtered = allExpenses.stream()
+                .filter(expense -> {
+                    // Filter by seasonId
+                    if (criteria.getSeasonId() != null &&
+                            !criteria.getSeasonId().equals(expense.getSeason().getId())) {
+                        return false;
+                    }
+                    // Filter by plotId (season's plot)
+                    if (criteria.getPlotId() != null &&
+                            (expense.getSeason().getPlot() == null ||
+                                    !criteria.getPlotId().equals(expense.getSeason().getPlot().getId()))) {
+                        return false;
+                    }
+                    // Filter by taskId
+                    if (criteria.getTaskId() != null &&
+                            (expense.getTask() == null ||
+                                    !criteria.getTaskId().equals(expense.getTask().getId()))) {
+                        return false;
+                    }
+                    // Filter by category
+                    if (criteria.getCategory() != null && !criteria.getCategory().isBlank() &&
+                            (expense.getCategory() == null ||
+                                    !expense.getCategory().equalsIgnoreCase(criteria.getCategory()))) {
+                        return false;
+                    }
+                    // Filter by date range
+                    LocalDate date = expense.getExpenseDate();
+                    if (criteria.getFromDate() != null && date.isBefore(criteria.getFromDate())) {
+                        return false;
+                    }
+                    if (criteria.getToDate() != null && date.isAfter(criteria.getToDate())) {
+                        return false;
+                    }
+                    // Filter by amount range
+                    BigDecimal amount = expense.getEffectiveAmount();
+                    if (criteria.getMinAmount() != null && amount.compareTo(criteria.getMinAmount()) < 0) {
+                        return false;
+                    }
+                    if (criteria.getMaxAmount() != null && amount.compareTo(criteria.getMaxAmount()) > 0) {
+                        return false;
+                    }
+                    // Filter by keyword (itemName)
+                    if (criteria.getKeyword() != null && !criteria.getKeyword().isBlank()) {
+                        String kw = criteria.getKeyword().toLowerCase();
+                        if (expense.getItemName() == null ||
+                                !expense.getItemName().toLowerCase().contains(kw)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .sorted((e1, e2) -> Integer.compare(
+                        e2.getId() != null ? e2.getId() : 0,
+                        e1.getId() != null ? e1.getId() : 0))
+                .map(this::toResponse)
+                .toList();
+
+        // Paginate
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, filtered.size());
+        List<ExpenseResponse> pageItems = fromIndex >= filtered.size() ? List.of()
+                : filtered.subList(fromIndex, toIndex);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<ExpenseResponse> pageData = new PageImpl<>(pageItems, pageable, filtered.size());
+
+        return PageResponse.of(pageData, pageItems);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PRIVATE VALIDATION HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * BR8: Validate that expense amount is greater than 0.
+     */
+    private void validateExpenseAmount(CreateExpenseRequest request) {
+        if (request.getUnitPrice() != null && request.getQuantity() != null) {
+            BigDecimal total = request.getUnitPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+            if (total.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new AppException(ErrorCode.EXPENSE_AMOUNT_INVALID);
+            }
+        }
+    }
+
+    private void validateExpenseAmount(UpdateExpenseRequest request) {
+        if (request.getUnitPrice() != null && request.getQuantity() != null) {
+            BigDecimal total = request.getUnitPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+            if (total.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new AppException(ErrorCode.EXPENSE_AMOUNT_INVALID);
+            }
+        }
     }
 }

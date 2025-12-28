@@ -143,7 +143,23 @@ public enum ErrorCode {
                         HttpStatus.BAD_REQUEST),
         CANNOT_DELETE_RESOLVED_INCIDENT("ERR_CANNOT_DELETE_RESOLVED_INCIDENT", "Cannot delete a resolved incident",
                         HttpStatus.BAD_REQUEST),
-        INVALID_DEADLINE("ERR_INVALID_DEADLINE", "Deadline must be today or in the future", HttpStatus.BAD_REQUEST);
+        INVALID_DEADLINE("ERR_INVALID_DEADLINE", "Deadline must be today or in the future", HttpStatus.BAD_REQUEST),
+
+        // Season Business Rules (BR8/BR12)
+        SEASON_NAME_EXISTS_IN_PLOT("ERR_SEASON_NAME_EXISTS_IN_PLOT",
+                        "Season name already exists in this plot", HttpStatus.CONFLICT),
+
+        // Access Control Business Rules (BR1)
+        ACCESS_DENIED_INACTIVE_USER("ERR_ACCESS_DENIED_INACTIVE_USER",
+                        "Access denied: account is inactive or suspended", HttpStatus.FORBIDDEN),
+
+        // Expense Business Rules (BR8/BR12)
+        EXPENSE_SEASON_PLOT_MISMATCH("ERR_EXPENSE_SEASON_PLOT_MISMATCH",
+                        "Selected season does not belong to the selected plot", HttpStatus.BAD_REQUEST),
+        EXPENSE_TASK_SEASON_MISMATCH("ERR_EXPENSE_TASK_SEASON_MISMATCH",
+                        "Selected task does not belong to the selected season", HttpStatus.BAD_REQUEST),
+        EXPENSE_AMOUNT_INVALID("ERR_EXPENSE_AMOUNT_INVALID",
+                        "Amount must be greater than 0", HttpStatus.BAD_REQUEST);
 
         ErrorCode(String code, String message, HttpStatus statusCode) {
                 this.code = code;

@@ -85,4 +85,41 @@ public interface SeasonRepository extends JpaRepository<Season, Integer> {
      */
     @Query("SELECT s FROM Season s WHERE s.status = 'ACTIVE' AND s.plot.farm.owner.id = :ownerId ORDER BY s.startDate DESC")
     List<Season> findActiveSeasonsByOwnerIdOrderByStartDateDesc(@Param("ownerId") Long ownerId);
+
+    /**
+     * BR8/BR12: Check if a season name already exists within a plot
+     * (case-insensitive).
+     * Used to enforce uniqueness constraint for season names per plot.
+     * Excludes archived seasons and the season being updated (excludeId).
+     *
+     * @param plotId     the plot ID
+     * @param seasonName the season name to check
+     * @param excludeId  the season ID to exclude (for update operations), use -1
+     *                   for create
+     * @return true if a matching season exists
+     */
+    @Query("SELECT COUNT(s) > 0 FROM Season s WHERE s.plot.id = :plotId " +
+            "AND LOWER(s.seasonName) = LOWER(:seasonName) " +
+            "AND s.status <> 'ARCHIVED' " +
+            "AND (:excludeId IS NULL OR s.id <> :excludeId)")
+    boolean existsByPlotIdAndSeasonNameIgnoreCaseExcluding(
+            @Param("plotId") Integer plotId,
+            @Param("seasonName") String seasonName,
+            @Param("excludeId") Integer excludeId);
+
+    /**
+     * BR17: Search seasons by keyword (matches season name, plot name, or crop
+     * name).
+     * Used for the Text_change() search functionality.
+     *
+     * @param keyword the search keyword
+     * @param ownerId the farm owner's user ID
+     * @return list of matching seasons
+     */
+    @Query("SELECT s FROM Season s WHERE s.plot.farm.owner.id = :ownerId " +
+            "AND (LOWER(s.seasonName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(s.plot.plotName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(s.crop.cropName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "ORDER BY s.startDate DESC")
+    List<Season> searchByKeywordAndOwnerId(@Param("keyword") String keyword, @Param("ownerId") Long ownerId);
 }

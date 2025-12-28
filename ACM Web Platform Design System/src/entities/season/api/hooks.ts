@@ -196,3 +196,34 @@ export const useMySeasons = (
     ...options,
 });
 
+/**
+ * BR15: Hook to archive a completed or cancelled season
+ */
+export const useArchiveSeason = (
+    options?: UseMutationOptions<Season, Error, number>
+) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: seasonApi.archive,
+        onSuccess: (_, id) => {
+            queryClient.invalidateQueries({ queryKey: seasonKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: seasonKeys.lists() });
+        },
+        ...options,
+    });
+};
+
+/**
+ * BR17: Hook to search seasons by keyword
+ */
+export const useSearchSeasonsByKeyword = (
+    keyword: string,
+    options?: Omit<UseQueryOptions<Season[], Error>, 'queryKey' | 'queryFn'>
+) => useQuery({
+    queryKey: [...seasonKeys.all, 'search', keyword],
+    queryFn: () => seasonApi.searchByKeyword(keyword),
+    enabled: keyword.length > 0,
+    staleTime: 30 * 1000, // 30 seconds for search results
+    ...options,
+});
+
