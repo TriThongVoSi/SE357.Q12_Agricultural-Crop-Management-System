@@ -10,12 +10,12 @@ import org.example.QuanLyMuaVu.DTO.Request.CreateSeasonRequest;
 import org.example.QuanLyMuaVu.DTO.Request.StartSeasonRequest;
 import org.example.QuanLyMuaVu.DTO.Request.UpdateSeasonRequest;
 import org.example.QuanLyMuaVu.DTO.Request.UpdateSeasonStatusRequest;
+import org.example.QuanLyMuaVu.DTO.Response.MySeasonResponse;
 import org.example.QuanLyMuaVu.DTO.Response.SeasonDetailResponse;
 import org.example.QuanLyMuaVu.DTO.Response.SeasonResponse;
 import org.example.QuanLyMuaVu.Entity.Crop;
 import org.example.QuanLyMuaVu.Entity.Plot;
 import org.example.QuanLyMuaVu.Entity.Season;
-import org.example.QuanLyMuaVu.Entity.User;
 import org.example.QuanLyMuaVu.Entity.Variety;
 import org.example.QuanLyMuaVu.Enums.SeasonStatus;
 import org.example.QuanLyMuaVu.Exception.AppException;
@@ -26,50 +26,59 @@ import org.example.QuanLyMuaVu.Repository.ExpenseRepository;
 import org.example.QuanLyMuaVu.Repository.FieldLogRepository;
 import org.example.QuanLyMuaVu.Repository.HarvestRepository;
 import org.example.QuanLyMuaVu.Repository.PlotRepository;
-
 import org.example.QuanLyMuaVu.Repository.SeasonRepository;
 import org.example.QuanLyMuaVu.Repository.TaskRepository;
-import org.example.QuanLyMuaVu.Repository.UserRepository;
 import org.example.QuanLyMuaVu.Repository.VarietyRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.example.QuanLyMuaVu.Service.Season.SeasonQueryService;
+import org.example.QuanLyMuaVu.Service.Season.SeasonStatusService;
+import org.example.QuanLyMuaVu.Service.Season.SeasonValidationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
+/**
+ * Core Season CRUD service.
+ * Refactored to follow Single Responsibility Principle.
+ * 
+ * Responsibilities split into:
+ * - SeasonService (this): CRUD operations only
+ * - SeasonQueryService: Search and query operations
+ * - SeasonStatusService: Status transitions
+ * - SeasonValidationService: Business rule validation
+ */
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 public class SeasonService {
 
+    // Repositories
     SeasonRepository seasonRepository;
     PlotRepository plotRepository;
     CropRepository cropRepository;
     VarietyRepository varietyRepository;
-    UserRepository userRepository;
     HarvestRepository harvestRepository;
     ExpenseRepository expenseRepository;
-
-    SeasonMapper seasonMapper;
     TaskRepository taskRepository;
     FieldLogRepository fieldLogRepository;
+
+    // Mappers
+    SeasonMapper seasonMapper;
+
+    // Delegated Services (SRP compliance)
+    SeasonQueryService queryService;
+    SeasonStatusService statusService;
+    SeasonValidationService validationService;
     FarmAccessService farmAccessService;
 
+    // =========================================================================
+    // LEGACY METHODS (Backward Compatibility)
+    // =========================================================================
+
     /**
-     * Legacy creation method kept for backward compatibility with existing
-     * controllers.
+     * Legacy creation method kept for backward compatibility.
      */
     public Season create(Integer plotId, Integer cropId, String seasonName, LocalDate startDate,
             Integer initialPlantCount) {
@@ -114,116 +123,76 @@ public class SeasonService {
         deleteSeason(id);
     }
 
-    /**
-     * Get a minimal list of seasons for the current farmer (for dropdown
-     * selectors).
-     * Returns all accessible seasons with minimal fields.
-     */
-    @Transactional(readOnly = true)
-    public List<org.example.QuanLyMuaVu.DTO.Response.MySeasonResponse> getMySeasons() {
-        User currentUser = getCurrentUser();
-        List<Integer> accessibleFarmIds = farmAccessService.getAccessibleFarmIdsForCurrentUser();
+    // =========================================================================
+    // DELEGATED QUERY METHODS
+    // =========================================================================
 
-        java.util.Set<Season> allSeasons = new java.util.LinkedHashSet<>();
-
-        if (!accessibleFarmIds.isEmpty()) {
-            allSeasons.addAll(seasonRepository.findAllByPlot_Farm_IdIn(accessibleFarmIds));
-        }
-        allSeasons.addAll(seasonRepository.findAllByPlot_User(currentUser));
-
-        return allSeasons.stream()
-                .sorted((s1, s2) -> Integer.compare(
-                        s2.getId() != null ? s2.getId() : 0,
-                        s1.getId() != null ? s1.getId() : 0))
-                .map(season -> org.example.QuanLyMuaVu.DTO.Response.MySeasonResponse.builder()
-                        .seasonId(season.getId())
-                        .seasonName(season.getSeasonName())
-                        .startDate(season.getStartDate())
-                        .endDate(season.getEndDate())
-                        .plannedHarvestDate(season.getPlannedHarvestDate())
-                        .status(season.getStatus() != null ? season.getStatus().name() : null)
-                        .build())
-                .toList();
+    public List<MySeasonResponse> getMySeasons() {
+        return queryService.getMySeasons();
     }
-
-    // --- New Farmer workspace APIs ---
 
     public PageResponse<SeasonResponse> searchMySeasons(
-            Integer plotId,
-            Integer cropId,
-            String status,
-            LocalDate from,
-            LocalDate to,
-            int page,
-            int size) {
-        User currentUser = getCurrentUser();
-
-        List<Integer> accessibleFarmIds = farmAccessService.getAccessibleFarmIdsForCurrentUser();
-        List<Season> all = new ArrayList<>();
-
-        if (!accessibleFarmIds.isEmpty()) {
-            all.addAll(seasonRepository.findAllByPlot_Farm_IdIn(accessibleFarmIds));
-        }
-        all.addAll(seasonRepository.findAllByPlot_User(currentUser));
-
-        // de-duplicate by season id while preserving order (latest first later)
-        Map<Integer, Season> byId = new LinkedHashMap<>();
-        for (Season season : all) {
-            if (season.getId() != null) {
-                byId.putIfAbsent(season.getId(), season);
-            }
-        }
-        all = new ArrayList<>(byId.values());
-
-        SeasonStatus statusFilter = null;
-        if (status != null && !status.isBlank()) {
-            try {
-                statusFilter = SeasonStatus.fromCode(status);
-            } catch (IllegalArgumentException ex) {
-                throw new AppException(ErrorCode.BAD_REQUEST);
-            }
-        }
-
-        final Integer plotIdFilter = plotId;
-        final Integer cropIdFilter = cropId;
-        final SeasonStatus statusFilterFinal = statusFilter;
-        final LocalDate fromDate = from;
-        final LocalDate toDate = to;
-
-        List<SeasonResponse> filtered = all.stream()
-                .filter(season -> plotIdFilter == null
-                        || (season.getPlot() != null && plotIdFilter.equals(season.getPlot().getId())))
-                .filter(season -> cropIdFilter == null
-                        || (season.getCrop() != null && cropIdFilter.equals(season.getCrop().getId())))
-                .filter(season -> statusFilterFinal == null || statusFilterFinal.equals(season.getStatus()))
-                .filter(season -> {
-                    if (fromDate == null && toDate == null) {
-                        return true;
-                    }
-                    LocalDate sStart = season.getStartDate();
-                    LocalDate sEnd = season.getEndDate();
-                    if (sEnd == null) {
-                        sEnd = sStart;
-                    }
-                    LocalDate rangeStart = fromDate != null ? fromDate : sStart;
-                    LocalDate rangeEnd = toDate != null ? toDate : sEnd;
-                    return !sEnd.isBefore(rangeStart) && !sStart.isAfter(rangeEnd);
-                })
-                .sorted((s1, s2) -> Integer.compare(
-                        s2.getId() != null ? s2.getId() : 0,
-                        s1.getId() != null ? s1.getId() : 0))
-                .map(seasonMapper::toResponse)
-                .toList();
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        int fromIndex = page * size;
-        int toIndex = Math.min(fromIndex + size, filtered.size());
-        List<SeasonResponse> pageItems = fromIndex >= filtered.size() ? List.of()
-                : filtered.subList(fromIndex, toIndex);
-        Page<SeasonResponse> pageData = new PageImpl<>(pageItems, pageable, filtered.size());
-
-        return PageResponse.of(pageData, pageItems);
+            Integer plotId, Integer cropId, String status,
+            LocalDate from, LocalDate to, int page, int size) {
+        return queryService.searchMySeasons(plotId, cropId, status, from, to, page, size);
     }
+
+    public SeasonDetailResponse getSeasonForCurrentFarmer(Integer id) {
+        return queryService.getSeasonForCurrentFarmer(id);
+    }
+
+    public List<SeasonResponse> searchSeasonsByKeyword(String keyword) {
+        return queryService.searchSeasonsByKeyword(keyword);
+    }
+
+    public Season getSeasonById(Integer id) {
+        return queryService.getSeasonById(id);
+    }
+
+    // =========================================================================
+    // DELEGATED STATUS METHODS
+    // =========================================================================
+
+    public SeasonResponse updateSeasonStatus(Integer id, UpdateSeasonStatusRequest request) {
+        return statusService.updateSeasonStatus(id, request);
+    }
+
+    public SeasonResponse startSeason(Integer id, StartSeasonRequest request) {
+        return statusService.startSeason(id, request);
+    }
+
+    public SeasonResponse completeSeason(Integer id, CompleteSeasonRequest request) {
+        return statusService.completeSeason(id, request);
+    }
+
+    public SeasonResponse cancelSeason(Integer id, CancelSeasonRequest request) {
+        return statusService.cancelSeason(id, request);
+    }
+
+    public SeasonResponse ArchiveSeason(Integer id) {
+        return statusService.archiveSeason(id);
+    }
+
+    public boolean ValidateStatusConstraints(SeasonStatus currentStatus, SeasonStatus targetStatus) {
+        return statusService.validateStatusConstraints(currentStatus, targetStatus);
+    }
+
+    // PascalCase wrappers for BR compliance
+    public SeasonResponse StartSeason(Integer id, StartSeasonRequest request) {
+        return statusService.StartSeason(id, request);
+    }
+
+    public SeasonResponse CompleteSeason(Integer id, CompleteSeasonRequest request) {
+        return statusService.CompleteSeason(id, request);
+    }
+
+    public SeasonResponse CancelSeason(Integer id, CancelSeasonRequest request) {
+        return statusService.CancelSeason(id, request);
+    }
+
+    // =========================================================================
+    // CRUD OPERATIONS (Core responsibility)
+    // =========================================================================
 
     public SeasonDetailResponse createSeason(CreateSeasonRequest request) {
         Plot plot = plotRepository.findById(request.getPlotId())
@@ -242,29 +211,20 @@ public class SeasonService {
             }
         }
 
-        LocalDate start = request.getStartDate();
-        LocalDate end = request.getEndDate();
-
-        if (start == null) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-        if (request.getPlannedHarvestDate() != null && request.getPlannedHarvestDate().isBefore(start)) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-        if (end != null && end.isBefore(start)) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-
-        validateNoOverlappingActiveOrPlannedSeasons(plot, start, request.getPlannedHarvestDate(), end, null);
+        // Delegate validation
+        validationService.validateSeasonDates(
+                request.getStartDate(), request.getEndDate(), request.getPlannedHarvestDate());
+        validationService.validateNoOverlappingActiveOrPlannedSeasons(
+                plot, request.getStartDate(), request.getPlannedHarvestDate(), request.getEndDate(), null);
 
         Season season = Season.builder()
                 .plot(plot)
                 .crop(crop)
                 .variety(variety)
                 .seasonName(request.getSeasonName())
-                .startDate(start)
+                .startDate(request.getStartDate())
                 .plannedHarvestDate(request.getPlannedHarvestDate())
-                .endDate(end)
+                .endDate(request.getEndDate())
                 .status(SeasonStatus.PLANNED)
                 .initialPlantCount(request.getInitialPlantCount())
                 .currentPlantCount(request.getInitialPlantCount())
@@ -276,11 +236,12 @@ public class SeasonService {
         return seasonMapper.toDetailResponse(saved);
     }
 
-    public SeasonDetailResponse getSeasonForCurrentFarmer(Integer id) {
-        Season season = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-        return seasonMapper.toDetailResponse(season);
+    /**
+     * BR8: CreateSeason wrapper with name uniqueness validation.
+     */
+    public SeasonDetailResponse CreateSeason(CreateSeasonRequest request) {
+        validationService.validateSeasonNameUniquenessInPlot(request.getPlotId(), request.getSeasonName(), null);
+        return createSeason(request);
     }
 
     public SeasonDetailResponse updateSeason(Integer id, UpdateSeasonRequest request) {
@@ -291,34 +252,23 @@ public class SeasonService {
         if (season.getStatus() == SeasonStatus.COMPLETED
                 || season.getStatus() == SeasonStatus.CANCELLED
                 || season.getStatus() == SeasonStatus.ARCHIVED) {
-            // Closed seasons are read-only
             throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
         }
 
-        LocalDate start = request.getStartDate();
-        LocalDate end = request.getEndDate();
-
-        if (start == null) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-        if (request.getPlannedHarvestDate() != null && request.getPlannedHarvestDate().isBefore(start)) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-        if (end != null && end.isBefore(start)) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-
-        validateNoOverlappingActiveOrPlannedSeasons(
+        // Delegate validation
+        validationService.validateSeasonDates(
+                request.getStartDate(), request.getEndDate(), request.getPlannedHarvestDate());
+        validationService.validateNoOverlappingActiveOrPlannedSeasons(
                 season.getPlot(),
-                start,
+                request.getStartDate(),
                 request.getPlannedHarvestDate(),
-                end,
+                request.getEndDate(),
                 id);
 
         season.setSeasonName(request.getSeasonName());
-        season.setStartDate(start);
+        season.setStartDate(request.getStartDate());
         season.setPlannedHarvestDate(request.getPlannedHarvestDate());
-        season.setEndDate(end);
+        season.setEndDate(request.getEndDate());
         season.setCurrentPlantCount(request.getCurrentPlantCount());
         season.setExpectedYieldKg(request.getExpectedYieldKg());
         season.setActualYieldKg(request.getActualYieldKg());
@@ -337,51 +287,15 @@ public class SeasonService {
         return seasonMapper.toDetailResponse(saved);
     }
 
-    public SeasonResponse updateSeasonStatus(Integer id, UpdateSeasonStatusRequest request) {
-        Season season = seasonRepository.findById(id)
+    /**
+     * BR12: UpdateSeason wrapper with name uniqueness validation.
+     */
+    public SeasonDetailResponse UpdateSeason(Integer id, UpdateSeasonRequest request) {
+        Season existing = seasonRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-
-        SeasonStatus targetStatus;
-        try {
-            targetStatus = SeasonStatus.fromCode(request.getStatus());
-        } catch (IllegalArgumentException ex) {
-            throw new AppException(ErrorCode.BAD_REQUEST);
-        }
-
-        SeasonStatus currentStatus = season.getStatus();
-        if (!isValidStatusTransition(currentStatus, targetStatus)) {
-            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
-        }
-
-        if (targetStatus == SeasonStatus.ACTIVE && request.getActualStartDate() != null) {
-            season.setStartDate(request.getActualStartDate());
-        }
-        if ((targetStatus == SeasonStatus.COMPLETED || targetStatus == SeasonStatus.CANCELLED
-                || targetStatus == SeasonStatus.ARCHIVED)
-                && request.getActualEndDate() != null) {
-            LocalDate end = request.getActualEndDate();
-            if (end.isBefore(season.getStartDate())) {
-                throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-            }
-            season.setEndDate(end);
-        }
-
-        season.setStatus(targetStatus);
-
-        // When closing a season, sync actual yield from its harvest batches
-        if (targetStatus == SeasonStatus.COMPLETED || targetStatus == SeasonStatus.ARCHIVED) {
-            var harvests = harvestRepository.findAllBySeason_Id(season.getId());
-            if (harvests != null && !harvests.isEmpty()) {
-                season.setActualYieldKg(
-                        harvests.stream()
-                                .map(h -> h.getQuantity() != null ? h.getQuantity() : java.math.BigDecimal.ZERO)
-                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
-            }
-        }
-
-        Season saved = seasonRepository.save(season);
-        return seasonMapper.toResponse(saved);
+        validationService.validateSeasonNameUniquenessInPlot(
+                existing.getPlot().getId(), request.getSeasonName(), id);
+        return updateSeason(id, request);
     }
 
     public void deleteSeason(Integer id) {
@@ -403,364 +317,5 @@ public class SeasonService {
         }
 
         seasonRepository.delete(season);
-    }
-
-    private boolean isValidStatusTransition(SeasonStatus currentStatus, SeasonStatus targetStatus) {
-        if (currentStatus == null) {
-            return targetStatus == SeasonStatus.PLANNED;
-        }
-
-        if (currentStatus == targetStatus) {
-            return true;
-        }
-
-        return switch (currentStatus) {
-            case PLANNED -> EnumSet.of(SeasonStatus.ACTIVE, SeasonStatus.CANCELLED).contains(targetStatus);
-            case ACTIVE -> EnumSet.of(SeasonStatus.COMPLETED, SeasonStatus.CANCELLED, SeasonStatus.ARCHIVED)
-                    .contains(targetStatus);
-            case COMPLETED, CANCELLED -> targetStatus == SeasonStatus.ARCHIVED;
-            case ARCHIVED -> false;
-        };
-    }
-
-    /**
-     * Start a season: PLANNED → ACTIVE.
-     * Validates that farm and plot are active before starting.
-     */
-    public SeasonResponse startSeason(Integer id, StartSeasonRequest request) {
-        Season season = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-
-        if (season.getStatus() != SeasonStatus.PLANNED) {
-            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
-        }
-
-        // Validate farm and plot are active
-        if (season.getPlot() == null || season.getPlot().getFarm() == null) {
-            throw new AppException(ErrorCode.BAD_REQUEST);
-        }
-
-        if (season.getPlot().getFarm().getActive() == null || !season.getPlot().getFarm().getActive()) {
-            throw new AppException(ErrorCode.FARM_INACTIVE);
-        }
-
-        // If actualStartDate provided, update startDate
-        if (request != null && request.getActualStartDate() != null) {
-            season.setStartDate(request.getActualStartDate());
-        }
-
-        season.setStatus(SeasonStatus.ACTIVE);
-        Season saved = seasonRepository.save(season);
-        return seasonMapper.toResponse(saved);
-    }
-
-    /**
-     * Complete a season: ACTIVE → COMPLETED.
-     * Checks for pending tasks and warns if forceComplete is not set.
-     * Auto-calculates actual yield from harvests if not provided.
-     */
-    public SeasonResponse completeSeason(Integer id, CompleteSeasonRequest request) {
-        Season season = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-
-        if (season.getStatus() != SeasonStatus.ACTIVE) {
-            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
-        }
-
-        // Validate end date
-        LocalDate endDate = request.getEndDate();
-        if (endDate.isBefore(season.getStartDate())) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-
-        // Check for pending/in-progress tasks
-        long pendingOrInProgressTasks = taskRepository.countBySeason_IdAndStatusIn(
-                season.getId(),
-                List.of(org.example.QuanLyMuaVu.Enums.TaskStatus.PENDING,
-                        org.example.QuanLyMuaVu.Enums.TaskStatus.IN_PROGRESS));
-
-        if (pendingOrInProgressTasks > 0 && !Boolean.TRUE.equals(request.getForceComplete())) {
-            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
-        }
-
-        // Set end date
-        season.setEndDate(endDate);
-
-        // Calculate actual yield
-        if (request.getActualYieldKg() != null) {
-            season.setActualYieldKg(request.getActualYieldKg());
-        } else {
-            // Auto-calculate from harvests
-            var harvests = harvestRepository.findAllBySeason_Id(season.getId());
-            if (harvests != null && !harvests.isEmpty()) {
-                season.setActualYieldKg(
-                        harvests.stream()
-                                .map(h -> h.getQuantity() != null ? h.getQuantity() : java.math.BigDecimal.ZERO)
-                                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
-            }
-        }
-
-        season.setStatus(SeasonStatus.COMPLETED);
-        Season saved = seasonRepository.save(season);
-        return seasonMapper.toResponse(saved);
-    }
-
-    /**
-     * Cancel a season: → CANCELLED.
-     * Validates no harvests exist unless forceCancel is true.
-     */
-    public SeasonResponse cancelSeason(Integer id, CancelSeasonRequest request) {
-        Season season = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-
-        if (season.getStatus() == SeasonStatus.COMPLETED || season.getStatus() == SeasonStatus.ARCHIVED) {
-            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
-        }
-
-        // Check for harvests
-        boolean hasHarvests = harvestRepository.existsBySeason_Id(id);
-        if (hasHarvests && !Boolean.TRUE.equals(request.getForceCancel())) {
-            throw new AppException(ErrorCode.SEASON_HAS_CHILD_RECORDS);
-        }
-
-        season.setStatus(SeasonStatus.CANCELLED);
-        if (season.getEndDate() == null) {
-            season.setEndDate(LocalDate.now());
-        }
-
-        Season saved = seasonRepository.save(season);
-        return seasonMapper.toResponse(saved);
-    }
-
-    private User getCurrentUser() {
-        return farmAccessService.getCurrentUser();
-    }
-
-    private void validateNoOverlappingActiveOrPlannedSeasons(
-            Plot plot,
-            LocalDate start,
-            LocalDate plannedHarvestDate,
-            LocalDate end,
-            Integer excludeSeasonId) {
-        if (plot == null || start == null) {
-            throw new AppException(ErrorCode.INVALID_SEASON_DATES);
-        }
-
-        LocalDate newStart = start;
-        LocalDate newEnd = end != null ? end : plannedHarvestDate;
-
-        List<Season> existing = seasonRepository.findAllByPlot_Id(plot.getId());
-        for (Season other : existing) {
-            if (excludeSeasonId != null && excludeSeasonId.equals(other.getId())) {
-                continue;
-            }
-            SeasonStatus status = other.getStatus();
-            if (status == null
-                    || (status != SeasonStatus.PLANNED && status != SeasonStatus.ACTIVE)) {
-                continue;
-            }
-
-            LocalDate otherStart = other.getStartDate();
-            LocalDate otherEnd = other.getEndDate() != null
-                    ? other.getEndDate()
-                    : other.getPlannedHarvestDate();
-
-            if (otherStart == null && otherEnd == null) {
-                // Conservatively treat undefined ranges as overlapping
-                throw new AppException(ErrorCode.SEASON_OVERLAP);
-            }
-
-            if (rangesOverlap(newStart, newEnd, otherStart, otherEnd)) {
-                throw new AppException(ErrorCode.SEASON_OVERLAP);
-            }
-        }
-    }
-
-    private boolean rangesOverlap(LocalDate start1, LocalDate end1, LocalDate start2, LocalDate end2) {
-        LocalDate s1 = start1;
-        LocalDate e1 = end1;
-        LocalDate s2 = start2;
-        LocalDate e2 = end2;
-
-        if (s1 == null || s2 == null) {
-            return true;
-        }
-
-        if (e1 != null && e2 != null) {
-            return !e1.isBefore(s2) && !e2.isBefore(s1);
-        }
-        if (e1 == null && e2 != null) {
-            return !e2.isBefore(s1);
-        }
-        if (e1 != null) { // e2 == null
-            return !e1.isBefore(s2);
-        }
-        // both open-ended
-        return true;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // BR COMPLIANT PASCALCASE WRAPPER METHODS
-    // As required by Demo Gen Code.docx Business Rules
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * BR8: CreateSeason wrapper method with season name uniqueness validation.
-     * Called by controller to comply with BR naming convention.
-     *
-     * @param request the season creation request
-     * @return the created season detail response
-     */
-    public SeasonDetailResponse CreateSeason(CreateSeasonRequest request) {
-        // BR8: Validate season name uniqueness within plot
-        validateSeasonNameUniquenessInPlot(request.getPlotId(), request.getSeasonName(), null);
-        return createSeason(request);
-    }
-
-    /**
-     * BR12: UpdateSeason wrapper method with season name uniqueness validation.
-     * Called by controller to comply with BR naming convention.
-     *
-     * @param id      the season ID
-     * @param request the season update request
-     * @return the updated season detail response
-     */
-    public SeasonDetailResponse UpdateSeason(Integer id, UpdateSeasonRequest request) {
-        Season existing = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        // BR12: Validate season name uniqueness within plot (excluding self)
-        validateSeasonNameUniquenessInPlot(existing.getPlot().getId(), request.getSeasonName(), id);
-        return updateSeason(id, request);
-    }
-
-    /**
-     * BR23: StartSeason wrapper method.
-     * Called by controller to comply with BR naming convention.
-     *
-     * @param id      the season ID
-     * @param request optional start request with actual start date
-     * @return the updated season response
-     */
-    public SeasonResponse StartSeason(Integer id, StartSeasonRequest request) {
-        return startSeason(id, request);
-    }
-
-    /**
-     * BR27: CompleteSeason wrapper method.
-     * Called by controller to comply with BR naming convention.
-     *
-     * @param id      the season ID
-     * @param request the complete request with end date and optional yield
-     * @return the updated season response
-     */
-    public SeasonResponse CompleteSeason(Integer id, CompleteSeasonRequest request) {
-        return completeSeason(id, request);
-    }
-
-    /**
-     * BR31: CancelSeason wrapper method.
-     * Called by controller to comply with BR naming convention.
-     *
-     * @param id      the season ID
-     * @param request the cancel request with optional reason
-     * @return the updated season response
-     */
-    public SeasonResponse CancelSeason(Integer id, CancelSeasonRequest request) {
-        return cancelSeason(id, request);
-    }
-
-    /**
-     * BR15: ArchiveSeason - Archives a completed or cancelled season.
-     * Called by controller for BR14 flow: Confirm → ArchiveSeason().
-     * Sets status to ARCHIVED; record remains in database but hidden from active
-     * list.
-     *
-     * @param id the season ID to archive
-     * @return the updated season response
-     */
-    public SeasonResponse ArchiveSeason(Integer id) {
-        Season season = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-
-        // BR15: Only COMPLETED or CANCELLED seasons can be archived
-        if (season.getStatus() != SeasonStatus.COMPLETED &&
-                season.getStatus() != SeasonStatus.CANCELLED) {
-            throw new AppException(ErrorCode.INVALID_SEASON_STATUS_TRANSITION);
-        }
-
-        season.setStatus(SeasonStatus.ARCHIVED);
-        Season saved = seasonRepository.save(season);
-        return seasonMapper.toResponse(saved);
-    }
-
-    /**
-     * BR17: Search seasons by keyword for Text_change() handler.
-     *
-     * @param keyword the search keyword
-     * @return list of matching season responses
-     */
-    public List<SeasonResponse> searchSeasonsByKeyword(String keyword) {
-        User currentUser = getCurrentUser();
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return List.of();
-        }
-        List<Season> results = seasonRepository.searchByKeywordAndOwnerId(keyword.trim(), currentUser.getId());
-        return results.stream()
-                .map(seasonMapper::toResponse)
-                .toList();
-    }
-
-    /**
-     * BR20/BR24/BR28: Get season by ID for confirmation screen display.
-     * Used by displayStartSeasonConfirmationScreen,
-     * displayCompleteSeasonConfirmationScreen,
-     * displayCancelSeasonConfirmationScreen.
-     *
-     * @param id the season ID
-     * @return the season entity for the confirmation screen
-     */
-    public Season getSeasonById(Integer id) {
-        Season season = seasonRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
-        farmAccessService.assertCurrentUserCanAccessSeason(season);
-        return season;
-    }
-
-    /**
-     * BR22/BR26/BR30: ValidateStatusConstraints - Check if status transition is
-     * valid.
-     * Used by UI handler ValidateStatusConstraints() before calling status change
-     * methods.
-     *
-     * @param currentStatus the current season status
-     * @param targetStatus  the target season status
-     * @return true if transition is valid
-     */
-    public boolean ValidateStatusConstraints(SeasonStatus currentStatus, SeasonStatus targetStatus) {
-        return isValidStatusTransition(currentStatus, targetStatus);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // PRIVATE VALIDATION HELPERS
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /**
-     * BR8/BR12: Validate that season name is unique within the plot.
-     *
-     * @param plotId     the plot ID
-     * @param seasonName the season name to validate
-     * @param excludeId  the season ID to exclude (null for create, season ID for
-     *                   update)
-     */
-    private void validateSeasonNameUniquenessInPlot(Integer plotId, String seasonName, Integer excludeId) {
-        boolean exists = seasonRepository.existsByPlotIdAndSeasonNameIgnoreCaseExcluding(
-                plotId, seasonName, excludeId);
-        if (exists) {
-            throw new AppException(ErrorCode.SEASON_NAME_EXISTS_IN_PLOT);
-        }
     }
 }

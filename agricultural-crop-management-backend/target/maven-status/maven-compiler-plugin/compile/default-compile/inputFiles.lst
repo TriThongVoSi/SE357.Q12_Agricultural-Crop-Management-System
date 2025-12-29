@@ -223,6 +223,8 @@ C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\AuditLogService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\AuthenticationService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\CropService.java
+C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\Dashboard\DashboardAlertsService.java
+C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\Dashboard\DashboardKpiService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\DashboardService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\DocumentService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\ExpenseService.java
@@ -233,8 +235,12 @@ C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\HarvestService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\IncidentService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\InventoryService.java
+C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\JwtTokenService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\PlotService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\RoleService.java
+C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\Season\SeasonQueryService.java
+C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\Season\SeasonStatusService.java
+C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\Season\SeasonValidationService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\SeasonExpenseService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\SeasonHarvestService.java
 C:\Users\Asus\Desktop\SE357.Q12_Agricultural-Crop-Management-System\agricultural-crop-management-backend\src\main\java\org\example\QuanLyMuaVu\Service\SeasonService.java

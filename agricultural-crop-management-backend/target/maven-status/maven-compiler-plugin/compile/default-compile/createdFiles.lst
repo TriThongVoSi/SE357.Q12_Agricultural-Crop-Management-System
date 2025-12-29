@@ -82,7 +82,6 @@ org\example\QuanLyMuaVu\Service\FarmService.class
 org\example\QuanLyMuaVu\DTO\Response\ExpenseResponse.class
 org\example\QuanLyMuaVu\Entity\Ward$WardBuilder.class
 org\example\QuanLyMuaVu\Entity\Ward.class
-org\example\QuanLyMuaVu\Service\SeasonService$1.class
 org\example\QuanLyMuaVu\DTO\Request\FarmerUpdateRequest$FarmerUpdateRequestBuilder.class
 org\example\QuanLyMuaVu\Entity\Variety.class
 org\example\QuanLyMuaVu\Config\JacksonConfig.class
@@ -95,6 +94,7 @@ org\example\QuanLyMuaVu\Service\IncidentService$IncidentSummary.class
 org\example\QuanLyMuaVu\DTO\Response\StockMovementResponse.class
 org\example\QuanLyMuaVu\Pattern\Chain\SeasonValidationContext$Builder.class
 org\example\QuanLyMuaVu\DTO\Response\AuthenticationResponse$AuthenticationResponseBuilder.class
+org\example\QuanLyMuaVu\Service\JwtTokenService.class
 org\example\QuanLyMuaVu\DTO\Response\WarehouseResponse$WarehouseResponseBuilder.class
 org\example\QuanLyMuaVu\Service\TaskScheduler.class
 org\example\QuanLyMuaVu\DTO\Request\FarmerUpdateRolesRequest.class
@@ -232,6 +232,7 @@ org\example\QuanLyMuaVu\Config\JwtAuthenticationEntryPoint.class
 org\example\QuanLyMuaVu\DTO\Response\UserSummaryReportResponse.class
 org\example\QuanLyMuaVu\Repository\IncidentRepository.class
 org\example\QuanLyMuaVu\DTO\Response\SupplyLotResponse$SupplyLotResponseBuilder.class
+org\example\QuanLyMuaVu\Service\Dashboard\DashboardKpiService.class
 org\example\QuanLyMuaVu\Controller\SeasonController.class
 org\example\QuanLyMuaVu\DTO\Request\PlotRequest.class
 org\example\QuanLyMuaVu\Pattern\Chain\Validators\PlotOwnershipValidator.class
@@ -256,6 +257,7 @@ org\example\QuanLyMuaVu\DTO\Response\SeasonMinimalResponse.class
 org\example\QuanLyMuaVu\Controller\AddressController.class
 org\example\QuanLyMuaVu\Controller\PlotController.class
 org\example\QuanLyMuaVu\Repository\SeasonRepository.class
+org\example\QuanLyMuaVu\Service\Season\SeasonStatusService.class
 org\example\QuanLyMuaVu\DTO\Response\FieldLogResponse.class
 org\example\QuanLyMuaVu\Service\AddressService$AddressStats.class
 org\example\QuanLyMuaVu\Repository\PlotRepository.class
@@ -298,6 +300,7 @@ org\example\QuanLyMuaVu\Config\MailConfig.class
 org\example\QuanLyMuaVu\DTO\Request\FarmerCreationRequest.class
 org\example\QuanLyMuaVu\DTO\Response\SeasonDetailResponse.class
 org\example\QuanLyMuaVu\DTO\Response\SupplierResponse.class
+org\example\QuanLyMuaVu\Service\Season\SeasonQueryService.class
 org\example\QuanLyMuaVu\DTO\Request\StockInRequest$StockInRequestBuilder.class
 org\example\QuanLyMuaVu\Mapper\FarmerMapperImpl.class
 org\example\QuanLyMuaVu\DTO\Request\StartTaskRequest$StartTaskRequestBuilder.class
@@ -331,6 +334,7 @@ org\example\QuanLyMuaVu\DTO\Request\LogoutRequest$LogoutRequestBuilder.class
 org\example\QuanLyMuaVu\Repository\DocumentFavoriteRepository.class
 org\example\QuanLyMuaVu\Entity\SupplyItem.class
 org\example\QuanLyMuaVu\Service\FieldLogService.class
+org\example\QuanLyMuaVu\Service\Dashboard\DashboardAlertsService.class
 org\example\QuanLyMuaVu\Controller\AIController.class
 org\example\QuanLyMuaVu\DTO\Response\SupplyLotResponse.class
 org\example\QuanLyMuaVu\DTO\Response\HarvestSummaryResponse.class
@@ -338,6 +342,7 @@ org\example\QuanLyMuaVu\DTO\Response\FarmDetailResponse$FarmDetailResponseBuilde
 org\example\QuanLyMuaVu\DTO\Response\TodayTaskResponse.class
 org\example\QuanLyMuaVu\DTO\Request\TaskDoneRequest.class
 org\example\QuanLyMuaVu\Service\AuthenticationService.class
+org\example\QuanLyMuaVu\Service\Season\SeasonValidationService.class
 org\example\QuanLyMuaVu\Entity\Harvest.class
 org\example\QuanLyMuaVu\Controller\AdminDocumentController.class
 org\example\QuanLyMuaVu\Pattern\Observer\DomainEvent.class
