@@ -381,8 +381,9 @@ This project is **private** - All rights reserved.
 ---
 
 ## 🤝 Contributors
+Instructor: Nguyễn Trịnh Đông
 Võ Sĩ Trí Thông - Hồ Ngọc Quỳnh
-- SE357.Q12 Team - UIT University
+- Nhóm 31 - SE357.Q12 - University of Information Technology
 
 ---
 
