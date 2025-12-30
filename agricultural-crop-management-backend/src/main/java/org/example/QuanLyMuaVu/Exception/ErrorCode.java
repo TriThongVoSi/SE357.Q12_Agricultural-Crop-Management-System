@@ -159,7 +159,54 @@ public enum ErrorCode {
         EXPENSE_TASK_SEASON_MISMATCH("ERR_EXPENSE_TASK_SEASON_MISMATCH",
                         "Selected task does not belong to the selected season", HttpStatus.BAD_REQUEST),
         EXPENSE_AMOUNT_INVALID("ERR_EXPENSE_AMOUNT_INVALID",
-                        "Amount must be greater than 0", HttpStatus.BAD_REQUEST);
+                        "Amount must be greater than 0", HttpStatus.BAD_REQUEST),
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BR174-BR187: Expense Module Standard MSG Codes
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /**
+         * MSG 1: Mandatory field is empty
+         * BR175/BR179: When one of the mandatory fields' txtBox.Text isEmpty() = "true"
+         */
+        MSG_1_MANDATORY_FIELD_EMPTY("MSG_1", "Please enter mandatory data.", HttpStatus.BAD_REQUEST),
+
+        /**
+         * MSG 4: Invalid data format
+         * BR175/BR179: When field is in wrong format or amount <= 0
+         */
+        MSG_4_INVALID_FORMAT("MSG_4", "Invalid data format. Please enter again.", HttpStatus.BAD_REQUEST),
+
+        /**
+         * MSG 7: Save data successful
+         * BR176/BR180/BR183: When CRUD operation is successful
+         */
+        MSG_7_SAVE_SUCCESS("MSG_7", "Save data successful.", HttpStatus.OK),
+
+        /**
+         * MSG 9: Constraint violation
+         * BR176/BR180/BR183: When season-plot/task-season mismatch or FK violation
+         */
+        MSG_9_CONSTRAINT_VIOLATION("MSG_9", "Your action is failed due to constraints in the system.",
+                        HttpStatus.BAD_REQUEST),
+
+        /**
+         * MSG 10: Expense not found
+         * BR187: When expense search returns no results
+         */
+        MSG_10_EXPENSE_NOT_FOUND("MSG_10", "Expense not found.", HttpStatus.NOT_FOUND),
+
+        /**
+         * MSG 10: Season not found
+         * BR121: When season search returns no results
+         */
+        MSG_10_SEASON_NOT_FOUND("MSG_10", "Season not found.", HttpStatus.NOT_FOUND),
+
+        /**
+         * MSG 11: Confirmation message for delete/archive operations
+         * BR134/BR181: Confirmation message for archive/delete operation
+         */
+        MSG_11_CONFIRMATION("MSG_11", "Are you sure you want to proceed with this action?", HttpStatus.OK);
 
         ErrorCode(String code, String message, HttpStatus statusCode) {
                 this.code = code;

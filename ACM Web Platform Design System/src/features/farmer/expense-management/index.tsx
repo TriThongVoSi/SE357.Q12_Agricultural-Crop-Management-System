@@ -32,6 +32,9 @@ export function ExpenseManagement() {
         selectedStatus,
         setSelectedStatus,
         seasonOptions,
+        taskOptions,
+        isLoadingTasks,
+        handleTaskChange,
         expenses,
         filteredExpenses,
         formData,
@@ -185,6 +188,9 @@ export function ExpenseManagement() {
                     handleAddExpense={handleAddExpense}
                     resetForm={resetForm}
                     seasonOptions={seasonOptions}
+                    taskOptions={taskOptions}
+                    isLoadingTasks={isLoadingTasks}
+                    onTaskChange={handleTaskChange}
                 />
             </PageContainer>
     );

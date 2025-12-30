@@ -36,6 +36,10 @@ public class CreateSeasonRequest {
 
     LocalDate plannedHarvestDate;
 
+    /**
+     * BR102: [dtpEndDate] - Mandatory end date field
+     */
+    @NotNull(message = "MSG_1")
     LocalDate endDate;
 
     @NotNull(message = "KEY_INVALID")
@@ -45,4 +49,9 @@ public class CreateSeasonRequest {
     BigDecimal expectedYieldKg;
 
     String notes;
+
+    /**
+     * BR102: [txtBoxDescription] - Optional description field
+     */
+    String description;
 }

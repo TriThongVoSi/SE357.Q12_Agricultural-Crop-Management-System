@@ -140,4 +140,47 @@ public class SeasonValidationService {
             throw new AppException(ErrorCode.INVALID_SEASON_DATES);
         }
     }
+
+    /**
+     * BR102/BR106: ValidateDataFormat() - Validates input fields for Create/Update
+     * Season.
+     * Checks for empty mandatory fields, special characters in season name, and
+     * date format/logic.
+     *
+     * @param seasonName  the season name (mandatory, no special characters)
+     * @param startDate   the start date (mandatory)
+     * @param endDate     the end date (mandatory per BR102/BR106)
+     * @param plotId      the plot ID (mandatory)
+     * @param description optional description field
+     * @throws AppException MSG_1 if mandatory field is empty
+     * @throws AppException MSG_4 if format is invalid (special chars) or dates are
+     *                      illogical
+     */
+    public void ValidateDataFormat(String seasonName, LocalDate startDate, LocalDate endDate,
+            Integer plotId, String description) {
+        // MSG 1: Check mandatory fields
+        if (seasonName == null || seasonName.trim().isEmpty()) {
+            throw new AppException(ErrorCode.MSG_1_MANDATORY_FIELD_EMPTY);
+        }
+        if (startDate == null) {
+            throw new AppException(ErrorCode.MSG_1_MANDATORY_FIELD_EMPTY);
+        }
+        if (endDate == null) {
+            throw new AppException(ErrorCode.MSG_1_MANDATORY_FIELD_EMPTY);
+        }
+        if (plotId == null) {
+            throw new AppException(ErrorCode.MSG_1_MANDATORY_FIELD_EMPTY);
+        }
+
+        // MSG 4: Check seasonName for special characters
+        // Allowed: letters, digits, spaces, hyphens, underscores
+        if (!seasonName.matches("^[a-zA-Z0-9\\s\\-_]+$")) {
+            throw new AppException(ErrorCode.MSG_4_INVALID_FORMAT);
+        }
+
+        // MSG 4: Check date logic - startDate must be before or equal to endDate
+        if (startDate.isAfter(endDate)) {
+            throw new AppException(ErrorCode.MSG_4_INVALID_FORMAT);
+        }
+    }
 }

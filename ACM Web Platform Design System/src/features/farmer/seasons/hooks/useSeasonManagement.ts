@@ -16,6 +16,7 @@ import {
 import { useCrops } from '@/entities/crop';
 import type { Season, SeasonStatus, FilterState } from '../types';
 import { DEFAULT_PAGINATION } from '../constants';
+import { MSG } from '../utils/seasonValidation';
 
 const transformApiToFeature = (api: ApiSeason, cropMap: Map<number, string>): Season => {
   const cropDisplay = api.cropName || cropMap.get(api.cropId) || `Crop #${api.cropId}`;
@@ -68,14 +69,16 @@ export function useSeasonManagement() {
 
   const createMutation = useCreateSeason({
     onSuccess: () => {
-      toast.success('Season created successfully');
+      // BR103: MSG_7 - "Save data successful."
+      toast.success(MSG.MSG_7);
       setNewSeasonOpen(false);
     },
-    onError: (err) => toast.error('Failed to create season', { description: err.message }),
+    onError: (err) => toast.error(MSG.MSG_9, { description: err.message }),
   });
   const updateMutation = useUpdateSeason({
-    onSuccess: () => toast.success('Season updated successfully'),
-    onError: (err) => toast.error('Failed to update season', { description: err.message }),
+    // BR107: MSG_7 - "Save data successful."
+    onSuccess: () => toast.success(MSG.MSG_7),
+    onError: (err) => toast.error(MSG.MSG_9, { description: err.message }),
   });
   const deleteMutation = useDeleteSeason({
     onSuccess: () => {

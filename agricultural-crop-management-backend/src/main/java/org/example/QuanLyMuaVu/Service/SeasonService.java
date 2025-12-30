@@ -237,9 +237,21 @@ public class SeasonService {
     }
 
     /**
-     * BR8: CreateSeason wrapper with name uniqueness validation.
+     * BR103: CreateSeason(Season season) - Creates a new season with full
+     * validation.
+     * Uses ValidateDataFormat() for input validation and checks DB constraints (MSG
+     * 9).
      */
     public SeasonDetailResponse CreateSeason(CreateSeasonRequest request) {
+        // BR102: Call ValidateDataFormat() for input validation (MSG_1, MSG_4)
+        validationService.ValidateDataFormat(
+                request.getSeasonName(),
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getPlotId(),
+                request.getDescription());
+
+        // BR103: Check season name uniqueness (MSG 9)
         validationService.validateSeasonNameUniquenessInPlot(request.getPlotId(), request.getSeasonName(), null);
         return createSeason(request);
     }
@@ -288,11 +300,23 @@ public class SeasonService {
     }
 
     /**
-     * BR12: UpdateSeason wrapper with name uniqueness validation.
+     * BR107: UpdateSeason(Season season) - Updates a season with full validation.
+     * Uses ValidateDataFormat() for input validation and checks DB constraints (MSG
+     * 9).
      */
     public SeasonDetailResponse UpdateSeason(Integer id, UpdateSeasonRequest request) {
         Season existing = seasonRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.SEASON_NOT_FOUND));
+
+        // BR106: Call ValidateDataFormat() for input validation (MSG_1, MSG_4)
+        validationService.ValidateDataFormat(
+                request.getSeasonName(),
+                request.getStartDate(),
+                request.getEndDate(),
+                existing.getPlot().getId(),
+                request.getDescription());
+
+        // BR107: Check season name uniqueness (MSG 9)
         validationService.validateSeasonNameUniquenessInPlot(
                 existing.getPlot().getId(), request.getSeasonName(), id);
         return updateSeason(id, request);

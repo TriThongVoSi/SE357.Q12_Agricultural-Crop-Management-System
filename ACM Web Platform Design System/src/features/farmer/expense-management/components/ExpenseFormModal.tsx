@@ -6,6 +6,7 @@ import {
     Plus,
     DollarSign,
     Building2,
+    ListTodo,
 } from "lucide-react";
 import {
     Dialog,
@@ -26,7 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import type { Expense, ExpenseFormData, ExpenseStatus } from "../types";
+import type { Expense, ExpenseFormData, ExpenseStatus, TaskOption } from "../types";
 
 interface ExpenseFormModalProps {
     isOpen: boolean;
@@ -37,6 +38,9 @@ interface ExpenseFormModalProps {
     handleAddExpense: () => void;
     resetForm: () => void;
     seasonOptions: { value: string; label: string }[];
+    taskOptions?: TaskOption[];
+    isLoadingTasks?: boolean;
+    onTaskChange?: (taskId: string) => void;
 }
 
 export function ExpenseFormModal({
@@ -48,10 +52,26 @@ export function ExpenseFormModal({
     handleAddExpense,
     resetForm,
     seasonOptions,
+    taskOptions = [],
+    isLoadingTasks = false,
+    onTaskChange,
 }: ExpenseFormModalProps) {
     const handleClose = () => {
         setIsOpen(false);
         resetForm();
+    };
+
+    const handleTaskSelection = (value: string) => {
+        if (onTaskChange) {
+            onTaskChange(value);
+        } else {
+            const taskId = parseInt(value, 10);
+            setFormData({ 
+                ...formData, 
+                linkedTask: value,
+                linkedTaskId: isNaN(taskId) ? undefined : taskId,
+            });
+        }
     };
 
     return (
@@ -126,7 +146,7 @@ export function ExpenseFormModal({
                     {/* Description */}
                     <div className="space-y-2">
                         <Label htmlFor="description" className="text-[#333333]">
-                            Description <span className="text-[#E74C3C]">*</span>
+                            Description
                         </Label>
                         <Input
                             id="description"
@@ -160,21 +180,57 @@ export function ExpenseFormModal({
 
                     {/* Linked Task & Season */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* LINKED TASK - Now a Dropdown */}
                         <div className="space-y-2">
                             <Label htmlFor="linkedTask" className="text-[#333333]">
-                                Linked Task
+                                <div className="flex items-center gap-2">
+                                    <ListTodo className="w-4 h-4" />
+                                    Linked Task
+                                </div>
                             </Label>
-                            <Input
-                                id="linkedTask"
-                                placeholder="e.g., Harvest - Plot B"
-                                value={formData.linkedTask}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, linkedTask: e.target.value })
-                                }
-                                className="rounded-xl border-[#E0E0E0] focus:border-[#3BA55D]"
-                            />
+                            <Select
+                                value={formData.linkedTask || "none"}
+                                onValueChange={(value) => {
+                                    if (value === "none") {
+                                        setFormData({ 
+                                            ...formData, 
+                                            linkedTask: "",
+                                            linkedTaskId: undefined,
+                                        });
+                                    } else {
+                                        handleTaskSelection(value);
+                                    }
+                                }}
+                                disabled={isLoadingTasks || taskOptions.length === 0}
+                            >
+                                <SelectTrigger className="rounded-xl border-[#E0E0E0]">
+                                    <SelectValue placeholder={
+                                        isLoadingTasks 
+                                            ? "Loading tasks..." 
+                                            : taskOptions.length === 0 
+                                                ? "No tasks available" 
+                                                : "Select task (optional)"
+                                    } />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        <span className="text-[#777777]">No linked task</span>
+                                    </SelectItem>
+                                    {taskOptions.map((task) => (
+                                        <SelectItem key={task.value} value={task.value}>
+                                            {task.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {taskOptions.length === 0 && !isLoadingTasks && (
+                                <p className="text-xs text-[#777777]">
+                                    No tasks found for this season
+                                </p>
+                            )}
                         </div>
 
+                        {/* LINKED SEASON - Dropdown */}
                         <div className="space-y-2">
                             <Label htmlFor="linkedSeason" className="text-[#333333]">
                                 Linked Season

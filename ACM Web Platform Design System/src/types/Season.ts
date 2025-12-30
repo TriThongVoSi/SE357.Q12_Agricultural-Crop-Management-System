@@ -34,9 +34,11 @@ export interface CreateSeasonRequest {
   seasonName: string;
   startDate: string;
   plannedHarvestDate?: string;
+  endDate: string;  // BR102: Made mandatory
   initialPlantCount: number;
   expectedYieldKg?: number;
   notes?: string;
+  description?: string;  // BR102: Added description field
 }
 
 export interface CompleteSeasonRequest {

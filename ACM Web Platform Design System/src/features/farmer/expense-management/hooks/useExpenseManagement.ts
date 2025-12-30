@@ -8,7 +8,8 @@ import {
     useDeleteExpense,
     type Expense as ApiExpense,
 } from "@/entities/expense";
-import type { Expense, ExpenseFormData } from "../types";
+import { useTasksBySeason, type Task as ApiTask } from "@/entities/task";
+import type { Expense, ExpenseFormData, TaskOption } from "../types";
 import { BUDGET_CONFIG } from "../constants";
 
 const INITIAL_FORM_DATA: ExpenseFormData = {
@@ -16,7 +17,10 @@ const INITIAL_FORM_DATA: ExpenseFormData = {
     category: "",
     description: "",
     linkedTask: "",
+    linkedTaskId: undefined,
     linkedSeason: "",
+    linkedSeasonId: undefined,
+    linkedPlotId: undefined,
     amount: "",
     status: "recorded",
     notes: "",
@@ -34,7 +38,8 @@ const CATEGORY_KEYWORDS: Array<{ keywords: string[]; category: string }> = [
     { keywords: ["repair", "maintenance", "service"], category: "Maintenance" },
 ];
 
-const inferCategory = (itemName: string): string => {
+const inferCategory = (itemName: string | null | undefined): string => {
+    if (!itemName) return "Other";
     const value = itemName.toLowerCase();
     for (const entry of CATEGORY_KEYWORDS) {
         if (entry.keywords.some((keyword) => value.includes(keyword))) {
@@ -45,17 +50,22 @@ const inferCategory = (itemName: string): string => {
 };
 
 const mapApiExpense = (expense: ApiExpense, fallbackSeasonName: string): Expense => {
-    const amount = expense.totalCost ?? expense.unitPrice * expense.quantity;
+    // Use new 'amount' field if available, otherwise calculate from legacy fields
+    const amount = expense.amount ?? expense.totalCost ?? ((expense.unitPrice ?? 0) * (expense.quantity ?? 1));
     return {
         id: String(expense.id),
         date: expense.expenseDate,
-        category: inferCategory(expense.itemName),
-        description: expense.itemName,
-        linkedTask: "",
+        category: expense.category ?? inferCategory(expense.itemName),
+        description: expense.itemName ?? expense.category ?? "Expense",
+        linkedTask: expense.taskTitle ?? "",
+        linkedTaskId: expense.taskId ?? undefined,
         linkedSeason: expense.seasonName ?? fallbackSeasonName,
-        amount,
+        linkedSeasonId: expense.seasonId ?? undefined,
+        linkedPlotId: expense.plotId ?? undefined,
+        linkedPlotName: expense.plotName ?? undefined,
+        amount: amount ?? 0,
         status: "recorded",
-        notes: "",
+        notes: expense.note ?? "",
         vendor: "",
     };
 };
@@ -69,12 +79,20 @@ export function useExpenseManagement() {
 
     const selectedSeason = seasonId ? String(seasonId) : "all";
 
+    // Get current season's plot ID for BR176 validation
+    const currentSeasonPlotId = useMemo(() => {
+        if (!seasonId) return undefined;
+        const season = seasons.find((s) => s.id === seasonId);
+        return season?.plotId ?? undefined;
+    }, [seasonId, seasons]);
+
     const seasonOptions = useMemo(() => {
         const options = seasons.map((season) => ({
             value: String(season.id),
             label: season.seasonName,
+            plotId: season.plotId,
         }));
-        return [{ value: "all", label: "All Seasons" }, ...options];
+        return [{ value: "all", label: "All Seasons", plotId: undefined }, ...options];
     }, [seasons]);
 
     const selectedSeasonName = useMemo(() => {
@@ -101,11 +119,15 @@ export function useExpenseManagement() {
         setFormData({
             ...INITIAL_FORM_DATA,
             linkedSeason: selectedSeasonName || '',
+            linkedSeasonId: seasonId ?? undefined,
+            linkedPlotId: currentSeasonPlotId,
         });
         setSelectedExpense(null);
-    }, [selectedSeasonName]);
+    }, [selectedSeasonName, seasonId, currentSeasonPlotId]);
 
     const hasSeason = !!seasonId && seasonId > 0;
+    
+    // Fetch expenses
     const {
         data: expenseData,
         isLoading,
@@ -113,10 +135,31 @@ export function useExpenseManagement() {
         refetch,
     } = useExpensesBySeason(seasonId ?? 0, undefined, { enabled: hasSeason });
 
+    // Fetch tasks for the current season (for Linked Task dropdown)
+    const {
+        data: taskData,
+        isLoading: isLoadingTasks,
+    } = useTasksBySeason(seasonId ?? 0, { 
+        page: 0, 
+        size: 100, 
+        sortBy: 'title', 
+        sortDirection: 'asc' 
+    }, { enabled: hasSeason });
+
+    // Map tasks to dropdown options
+    const taskOptions: TaskOption[] = useMemo(() => {
+        const tasks = taskData?.items ?? [];
+        return tasks.map((task: ApiTask) => ({
+            value: String(task.taskId),
+            label: task.title,
+            id: task.taskId,
+        }));
+    }, [taskData]);
+
     const createMutation = useCreateExpense(seasonId ?? 0, {
         onSuccess: () => {
             toast.success("Expense Added", {
-                description: `${formData.description} has been recorded.`,
+                description: `${formData.description || formData.category} has been recorded.`,
             });
             setIsAddExpenseOpen(false);
             resetForm();
@@ -199,7 +242,7 @@ export function useExpenseManagement() {
             return;
         }
 
-        if (!formData.date || !formData.description || !formData.amount) {
+        if (!formData.date || !formData.category || !formData.amount) {
             toast.error("Missing Required Fields", {
                 description: "Please fill in all required fields marked with *",
             });
@@ -214,17 +257,43 @@ export function useExpenseManagement() {
             return;
         }
 
+        // Get plot ID for the selected season
+        const plotId = formData.linkedPlotId ?? currentSeasonPlotId;
+        if (!plotId) {
+            toast.error("Missing Plot Information", {
+                description: "Season must have an associated plot.",
+            });
+            return;
+        }
+
+        // Parse task ID if selected
+        const taskId = formData.linkedTaskId ?? 
+            (formData.linkedTask ? parseInt(formData.linkedTask, 10) : undefined);
+
+        // Build BR176-compliant payload
         const payload = {
-            itemName: formData.description.trim(),
+            amount: amount,
+            expenseDate: formData.date,
+            category: formData.category,
+            plotId: plotId,
+            taskId: taskId && !isNaN(taskId) ? taskId : undefined,
+            note: formData.notes || undefined,
+            // Legacy fields for backward compatibility
+            itemName: formData.description.trim() || formData.category,
             unitPrice: amount,
             quantity: 1,
-            expenseDate: formData.date,
         };
 
         if (selectedExpense) {
             const expenseId = parseInt(selectedExpense.id, 10);
             if (!isNaN(expenseId)) {
-                updateMutation.mutate({ id: expenseId, data: payload });
+                updateMutation.mutate({ 
+                    id: expenseId, 
+                    data: {
+                        ...payload,
+                        seasonId: seasonId!,
+                    } 
+                });
             }
         } else {
             createMutation.mutate(payload);
@@ -249,8 +318,11 @@ export function useExpenseManagement() {
             date: expense.date,
             category: expense.category,
             description: expense.description,
-            linkedTask: expense.linkedTask || "",
+            linkedTask: expense.linkedTaskId ? String(expense.linkedTaskId) : "",
+            linkedTaskId: expense.linkedTaskId,
             linkedSeason: expense.linkedSeason || "",
+            linkedSeasonId: expense.linkedSeasonId,
+            linkedPlotId: expense.linkedPlotId,
             amount: String(expense.amount),
             status: expense.status,
             notes: expense.notes || "",
@@ -282,6 +354,17 @@ export function useExpenseManagement() {
         }
     };
 
+    // Handle task selection in form
+    const handleTaskChange = (taskIdStr: string) => {
+        const taskId = parseInt(taskIdStr, 10);
+        const selectedTask = taskOptions.find(t => t.id === taskId);
+        setFormData({
+            ...formData,
+            linkedTask: taskIdStr,
+            linkedTaskId: isNaN(taskId) ? undefined : taskId,
+        });
+    };
+
     return {
         // Tab State
         activeTab,
@@ -302,6 +385,11 @@ export function useExpenseManagement() {
         selectedStatus,
         setSelectedStatus,
         seasonOptions,
+
+        // Task options for dropdown
+        taskOptions,
+        isLoadingTasks,
+        handleTaskChange,
 
         // Expenses Data
         expenses,

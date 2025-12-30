@@ -12,12 +12,19 @@ import type { SeasonStatus } from '@/entities/season';
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const MSG = {
+  MSG_1: 'Please enter mandatory data.',
+  MSG_4: 'Invalid data format. Please enter again.',
+  MSG_7: 'Save data successful.',
+  MSG_9: 'Your action is failed due to constraints in the system.',
+  MSG_10: 'Season not found.',
+  MSG_11: 'Are you sure you want to archive this season?',
+  // Legacy aliases for backward compatibility
   MSG1: 'Please enter mandatory data.',
-  MSG4: 'Invalid format. Please enter again.',
+  MSG4: 'Invalid data format. Please enter again.',
   MSG7: 'Save data successful.',
   MSG9: 'Your action is failed due to constraints in the system.',
-  MSG10: 'Data not found.',
-  MSG11: 'Are you sure you want to proceed with this action?',
+  MSG10: 'Season not found.',
+  MSG11: 'Are you sure you want to archive this season?',
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -32,10 +39,11 @@ export interface ValidationResult {
 export interface SeasonFormData {
   seasonName?: string;
   startDate?: string;
-  endDate?: string;
+  endDate?: string;  // BR102/BR106: Made mandatory in validation
   plotId?: number;
   cropId?: number;
   initialPlantCount?: number;
+  description?: string;  // BR102/BR106: Added description field
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -68,7 +76,11 @@ export function ValidateDataFormat(formData: SeasonFormData): ValidationResult {
     errors.push(`${MSG.MSG1} - Plot is required.`);
   }
   if (!formData.cropId) {
-    errors.push(`${MSG.MSG1} - Crop is required.`);
+    errors.push(`${MSG.MSG_1} - Crop is required.`);
+  }
+  // BR102/BR106: endDate is now mandatory
+  if (!formData.endDate) {
+    errors.push(`${MSG.MSG_1} - End Date is required.`);
   }
 
   // Check format constraints (MSG4)

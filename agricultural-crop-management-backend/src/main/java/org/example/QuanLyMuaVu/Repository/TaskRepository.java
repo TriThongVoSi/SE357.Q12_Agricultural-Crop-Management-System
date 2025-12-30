@@ -107,4 +107,27 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
          */
         @Query("SELECT COUNT(t) FROM Task t WHERE t.season.id = :seasonId AND t.status = 'DONE'")
         long countCompletedBySeasonId(@Param("seasonId") Integer seasonId);
+
+        // ═══════════════════════════════════════════════════════════════════════════
+        // BR176/BR180: Expense-Task Validation Queries
+        // ═══════════════════════════════════════════════════════════════════════════
+
+        /**
+         * BR176/BR180: Check if a task exists and belongs to the specified season.
+         * Used to validate [Expense.task_id] belongs to the selected Season.
+         *
+         * @param taskId   the task ID to validate
+         * @param seasonId the season ID the task should belong to
+         * @return true if task exists and belongs to the season
+         */
+        boolean existsByIdAndSeasonId(Integer taskId, Integer seasonId);
+
+        /**
+         * BR176/BR180: Find task by ID and season for validation.
+         *
+         * @param taskId   the task ID
+         * @param seasonId the season ID
+         * @return Optional containing the task if found
+         */
+        Optional<Task> findByIdAndSeasonId(Integer taskId, Integer seasonId);
 }
