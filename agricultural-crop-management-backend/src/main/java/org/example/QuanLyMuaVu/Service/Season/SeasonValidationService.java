@@ -173,8 +173,9 @@ public class SeasonValidationService {
         }
 
         // MSG 4: Check seasonName for special characters
-        // Allowed: letters, digits, spaces, hyphens, underscores
-        if (!seasonName.matches("^[a-zA-Z0-9\\s\\-_]+$")) {
+        // Allowed: Unicode letters (including Vietnamese), digits, spaces, hyphens,
+        // underscores
+        if (!seasonName.matches("^[\\p{L}\\p{M}0-9\\s\\-_]+$")) {
             throw new AppException(ErrorCode.MSG_4_INVALID_FORMAT);
         }
 
